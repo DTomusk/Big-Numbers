@@ -2,11 +2,13 @@
 // modular arithmetic is important
 // want a way to convert ints into bigs
 // want to randomly generate Bigs
+// first digit will be the sign
 
 use rand::prelude::*;
 use std::fmt;
 use std::ops;
 use std::cmp::Ordering;
+use std::convert::TryInto;
 
 struct Big([bool; 1024]);
 
@@ -25,8 +27,39 @@ impl Big {
         Big(arr)
     }
 
+    fn random_odd(s: Option<usize>) -> Big {
+        let mut b = Big::random(s);
+        b.0[1023] = true;
+        b
+    }
+
     fn zero() -> Big {
         Big([false; 1024])
+    }
+
+    // can only be used on numbers of limited size
+    fn print_decimal(&self) {
+        let mut i: i64 = 0;
+        for x in 0..1024 {
+            if self.0[x] {
+                i += 2_i64.pow((1023-x).try_into().unwrap());
+            }
+        }
+        println!("{:?}", i);
+    }
+
+    fn complement(&self) -> Big {
+        let mut comp = Big(self.0.clone());
+        let mut temp = Big([false; 1024]);
+        temp.0[1023] = true;
+        for x in 0..1024 {
+            if comp.0[x] {
+                comp.0[x] = false;
+            } else {
+                comp.0[x] = true;
+            }
+        }
+        comp + temp
     }
 }
 
@@ -58,7 +91,7 @@ impl ops::Add<Big> for Big {
         }
         if carry {
             // if the carry digit at the end is true then we've overflown
-            panic!("Overflow");
+            //panic!("Overflow");
         }
         res
     }
@@ -103,9 +136,11 @@ impl PartialEq for Big {
 }
 
 fn main() {
-    let this = Big::random(Some(3));
-    let that = Big::random(Some(3));
-    println!("{:#?}", this);
-    println!("{:#?}", that);
-    println!("{:#?}", this + that);
+    let those = Big::random_odd(Some(50));
+    those.print_decimal();
+    println!("{:#?}", those);
+    let comp = those.complement();
+    println!("{:#?}", comp);
+    // should be zero (these things should be tests)
+    println!("{:#?}", comp + those);
 }
