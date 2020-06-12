@@ -93,11 +93,12 @@ impl PartialOrd for Big {
 
 impl PartialEq for Big {
     fn eq(&self, other: &Big) -> bool {
-        if !(self < other) & !(self > other) {
-            true
-        } else {
-            false
+        for x in 0..1024 {
+            if self.0[x] ^ other.0[x] {
+                return false;
+            }
         }
+        true
     }
 }
 
