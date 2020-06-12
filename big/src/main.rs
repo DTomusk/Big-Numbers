@@ -6,12 +6,9 @@
 use rand::prelude::*;
 use std::fmt;
 use std::ops;
+use std::cmp::Ordering;
 
-struct Big {
-    // use bools to simulate bits
-    // num stores a 1024 "bit" number
-    num: [bool; 1024],
-}
+struct Big([bool; 1024]);
 
 impl Big {
     // s is the length of the number in bits
@@ -25,20 +22,18 @@ impl Big {
         for x in a..1024 {
             arr[x] = rand::random();
         }
-        Big {
-            num: arr,
-        }
+        Big(arr)
     }
 
     fn zero() -> Big {
-        Big { num: [false; 1024] }
+        Big([false; 1024])
     }
 }
 
 impl fmt::Debug for Big {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let mut sting = "".to_string();
-        for x in self.num.iter() {
+        for x in self.0.iter() {
             if *x {
                 sting.push_str("1");
             } else {
@@ -57,14 +52,52 @@ impl ops::Add<Big> for Big {
         let mut res = Big::zero();
         let mut inter = false;
         for x in (0..1024).rev() {
-            inter = self.num[x] ^ rhs.num[x];
-            res.num[x] = carry ^ inter;
-            carry = (self.num[x] & rhs.num[x]) | (inter & carry);
+            inter = self.0[x] ^ rhs.0[x];
+            res.0[x] = carry ^ inter;
+            carry = (self.0[x] & rhs.0[x]) | (inter & carry);
         }
         if carry {
+            // if the carry digit at the end is true then we've overflown
             panic!("Overflow");
         }
         res
+    }
+}
+
+impl ops::Rem<Big> for Big {
+    type Output = Big;
+
+    fn rem(self, modulus: Big) -> Big {
+        if modulus > self {
+            self
+        } else if modulus == self {
+            Big([false; 1024])
+        } else {
+            self
+        }
+    }
+}
+
+impl PartialOrd for Big {
+    fn partial_cmp(&self, other: &Big) -> Option<Ordering> {
+        for x in 0..1024 {
+            if self.0[x] & !other.0[x] {
+                return Some(Ordering::Greater);
+            } else if !self.0[x] & other.0[x] {
+                return Some(Ordering::Less);
+            }
+        }
+        Some(Ordering::Equal)
+    }
+}
+
+impl PartialEq for Big {
+    fn eq(&self, other: &Big) -> bool {
+        if !(self < other) & !(self > other) {
+            true
+        } else {
+            false
+        }
     }
 }
 
