@@ -9,18 +9,20 @@ use std::ops;
 use std::cmp::Ordering;
 use std::convert::TryInto;
 
-struct Big([bool; 1024]);
+const BIGSIZE: usize = 256;
+
+struct Big([bool; BIGSIZE]);
 
 impl Big {
     // s is the length of the number in bits
     fn random(s: Option<usize>) -> Big {
-        let mut arr: [bool; 1024] = [false; 1024];
+        let mut arr: [bool; BIGSIZE] = [false; BIGSIZE];
         // this part doesn't feel idiomatic
         let mut a = 0;
         if let Some(i) = s {
-            a = 1024 - i
+            a = BIGSIZE - i
         }
-        for x in a..1024 {
+        for x in a..BIGSIZE {
             arr[x] = rand::random();
         }
         Big(arr)
@@ -28,20 +30,20 @@ impl Big {
 
     fn random_odd(s: Option<usize>) -> Big {
         let mut b = Big::random(s);
-        b.0[1023] = true;
+        b.0[BIGSIZE-1] = true;
         b
     }
 
     fn zero() -> Big {
-        Big([false; 1024])
+        Big([false; BIGSIZE])
     }
 
     // can only be used on numbers of limited size
     fn print_decimal(&self) {
         let mut i: i64 = 0;
-        for x in 0..1024 {
+        for x in 0..BIGSIZE {
             if self.0[x] {
-                i += 2_i64.pow((1023-x).try_into().unwrap());
+                i += 2_i64.pow((BIGSIZE-1-x).try_into().unwrap());
             }
         }
         println!("{:?}", i);
@@ -49,9 +51,9 @@ impl Big {
 
     fn complement(&self) -> Big {
         let mut comp = Big(self.0.clone());
-        let mut temp = Big([false; 1024]);
-        temp.0[1023] = true;
-        for x in 0..1024 {
+        let mut temp = Big([false; BIGSIZE]);
+        temp.0[BIGSIZE-1] = true;
+        for x in 0..BIGSIZE {
             if comp.0[x] {
                 comp.0[x] = false;
             } else {
@@ -84,7 +86,7 @@ impl ops::Add for Big {
         let mut carry = false;
         let mut res = Big::zero();
         let mut inter = false;
-        for x in (0..1024).rev() {
+        for x in (0..BIGSIZE).rev() {
             inter = self.0[x] ^ rhs.0[x];
             res.0[x] = carry ^ inter;
             carry = (self.0[x] & rhs.0[x]) | (inter & carry);
@@ -112,13 +114,13 @@ impl ops::Rem for Big {
         if modulus > self {
             self
         } else if modulus == self {
-            Big([false; 1024])
+            Big([false; BIGSIZE])
         } else {
+            // i feel this might be the cause of the problems
             let mut temp = self - modulus;
             while temp > modulus {
                 temp = temp - modulus;
             }
-            // not quite right yet
             temp
         }
     }
@@ -126,7 +128,7 @@ impl ops::Rem for Big {
 
 impl PartialOrd for Big {
     fn partial_cmp(&self, other: &Big) -> Option<Ordering> {
-        for x in 0..1024 {
+        for x in 0..BIGSIZE {
             if self.0[x] & !other.0[x] {
                 return Some(Ordering::Greater);
             } else if !self.0[x] & other.0[x] {
@@ -139,7 +141,7 @@ impl PartialOrd for Big {
 
 impl PartialEq for Big {
     fn eq(&self, other: &Big) -> bool {
-        for x in 0..1024 {
+        for x in 0..BIGSIZE {
             // if any bit differs then not equal
             if self.0[x] ^ other.0[x] {
                 return false;
