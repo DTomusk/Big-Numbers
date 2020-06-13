@@ -62,6 +62,19 @@ impl Big {
         }
         comp + temp
     }
+
+    fn int_to_big(mut int: i32) -> Big {
+        let mut temp = Big::zero();
+        let mut i = BIGSIZE-1;
+        while int > 0 {
+            if int % 2 == 1 {
+                temp.0[i] = true;
+            }
+            int /= 2;
+            i -= 1;
+        }
+        temp
+    }
 }
 
 // need to modify to show negative sign
@@ -111,6 +124,9 @@ impl ops::Rem for Big {
     type Output = Big;
 
     fn rem(self, modulus: Big) -> Big {
+        if modulus == Big([false; BIGSIZE]) {
+            panic!("Mod 0 is undefined");
+        }
         if modulus > self {
             self
         } else if modulus == self {
@@ -118,7 +134,7 @@ impl ops::Rem for Big {
         } else {
             // i feel this might be the cause of the problems
             let mut temp = self - modulus;
-            while temp > modulus {
+            while temp >= modulus {
                 temp = temp - modulus;
             }
             temp
@@ -160,11 +176,5 @@ impl Clone for Big {
 }
 
 fn main() {
-    let those = Big::random_odd(Some(50));
-    those.print_decimal();
-    println!("{:#?}", those);
-    let comp = those.complement();
-    println!("{:#?}", comp);
-    // should be zero (these things should be tests)
-    println!("{:#?}", comp + those);
+    Big::int_to_big(254389072).print_decimal();
 }
