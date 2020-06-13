@@ -175,5 +175,30 @@ impl Clone for Big {
 }
 
 fn main() {
-    println!("{}", Big::int_to_big(254389072).big_to_int());
+    println!("{}", Big::int_to_big(254389097072).big_to_int());
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_complement() {
+        let this = Big::random(None);
+        assert_eq!(this + this.complement(), Big::zero());
+    }
+
+    #[test]
+    fn test_conversion() {
+        let i: i64 = 154329877;
+        assert_eq!(i, Big::int_to_big(i).big_to_int());
+    }
+
+    // assumes that conversion works (which has been tested)
+    #[test]
+    fn test_mod() {
+        let i: i64 = 120;
+        let j: i64 = 7;
+        assert_eq!(i % j, (Big::int_to_big(i) % Big::int_to_big(j)).big_to_int());
+    }
 }
