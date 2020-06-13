@@ -4,7 +4,6 @@
 // want to randomly generate Bigs
 // first digit will be the sign
 
-use rand::prelude::*;
 use std::fmt;
 use std::ops;
 use std::cmp::Ordering;
@@ -63,6 +62,7 @@ impl Big {
     }
 }
 
+// need to modify to show negative sign
 impl fmt::Debug for Big {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let mut sting = "".to_string();
@@ -77,7 +77,7 @@ impl fmt::Debug for Big {
     }
 }
 
-impl ops::Add<Big> for Big {
+impl ops::Add for Big {
     type Output = Big;
     // want to write a full adder
     fn add(self, rhs: Big) -> Big {
@@ -97,7 +97,15 @@ impl ops::Add<Big> for Big {
     }
 }
 
-impl ops::Rem<Big> for Big {
+impl ops::Sub for Big {
+    type Output = Big;
+
+    fn sub(self, rhs: Big) -> Big {
+        self + rhs.complement()
+    }
+}
+
+impl ops::Rem for Big {
     type Output = Big;
 
     fn rem(self, modulus: Big) -> Big {
@@ -106,7 +114,12 @@ impl ops::Rem<Big> for Big {
         } else if modulus == self {
             Big([false; 1024])
         } else {
-            self
+            let mut temp = self - modulus;
+            while temp > modulus {
+                temp = temp - modulus;
+            }
+            // not quite right yet
+            temp
         }
     }
 }
@@ -127,11 +140,20 @@ impl PartialOrd for Big {
 impl PartialEq for Big {
     fn eq(&self, other: &Big) -> bool {
         for x in 0..1024 {
+            // if any bit differs then not equal
             if self.0[x] ^ other.0[x] {
                 return false;
             }
         }
         true
+    }
+}
+
+impl Copy for Big {}
+
+impl Clone for Big {
+    fn clone(&self) -> Self {
+        Big(self.0.clone())
     }
 }
 
