@@ -4,6 +4,8 @@
 // want to randomly generate Bigs
 // first digit will be the sign
 
+// I have a sneaking suspicion that none of this is very memory efficient
+
 use std::fmt;
 use std::ops;
 use std::cmp::Ordering;
@@ -74,6 +76,16 @@ impl Big {
         }
         comp + temp
     }
+
+    // the same as multiplying by two a number of times
+    // have to take into account sign bit
+    fn shift(&self, times: usize) -> Big {
+        let mut new = Big::zero();
+        for x in times..BIGSIZE {
+            new.0[x-times] = self.0[x];
+        }
+        new
+    }
 }
 
 // need to modify to show negative sign
@@ -116,6 +128,24 @@ impl ops::Sub for Big {
 
     fn sub(self, rhs: Big) -> Big {
         self + rhs.complement()
+    }
+}
+
+impl ops::Mul for Big {
+    type Output = Big;
+
+    fn mul(self, rhs: Big) -> Big {
+        // for every one in rhs create a temp of self shifted that many times across and add it to the running total
+        let mut total = Big::zero();
+        for (i, x) in rhs.0.iter().enumerate() {
+            if *x {
+                println!("{:?}", i);
+                let temp = self.shift(BIGSIZE-i-1);
+                println!("{:#?}", temp);
+                total = total + temp;
+            }
+        }
+        total
     }
 }
 
@@ -175,7 +205,11 @@ impl Clone for Big {
 }
 
 fn main() {
-    println!("{}", Big::int_to_big(254389097072).big_to_int());
+    let this = Big::random(Some(3));
+    let that = Big::random(Some(3));
+    println!("{:#?}", this);
+    println!("{:#?}", that);
+    println!("{:#?}", this * that);
 }
 
 #[cfg(test)]
@@ -190,11 +224,18 @@ mod tests {
 
     #[test]
     fn test_conversion() {
+        // test ints should be randomly chosen
         let i: i64 = 154329877;
         assert_eq!(i, Big::int_to_big(i).big_to_int());
     }
 
-    // assumes that conversion works (which has been tested)
+    #[test]
+    fn test_mul() {
+        let this = Big::random(Some(10));
+        let that = Big::random(Some(10));
+        assert_eq!(this * that, Big::int_to_big(this.big_to_int() * that.big_to_int()));
+    }
+
     #[test]
     fn test_mod() {
         let i: i64 = 120;
