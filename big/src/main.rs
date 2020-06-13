@@ -38,15 +38,27 @@ impl Big {
         Big([false; BIGSIZE])
     }
 
-    // can only be used on numbers of limited size
-    fn print_decimal(&self) {
+    fn big_to_int(&self) -> i64 {
         let mut i: i64 = 0;
         for x in 0..BIGSIZE {
             if self.0[x] {
                 i += 2_i64.pow((BIGSIZE-1-x).try_into().unwrap());
             }
         }
-        println!("{:?}", i);
+        i
+    }
+
+    fn int_to_big(mut int: i64) -> Big {
+        let mut temp = Big::zero();
+        let mut i = BIGSIZE-1;
+        while int > 0 {
+            if int % 2 == 1 {
+                temp.0[i] = true;
+            }
+            int /= 2;
+            i -= 1;
+        }
+        temp
     }
 
     fn complement(&self) -> Big {
@@ -61,19 +73,6 @@ impl Big {
             }
         }
         comp + temp
-    }
-
-    fn int_to_big(mut int: i32) -> Big {
-        let mut temp = Big::zero();
-        let mut i = BIGSIZE-1;
-        while int > 0 {
-            if int % 2 == 1 {
-                temp.0[i] = true;
-            }
-            int /= 2;
-            i -= 1;
-        }
-        temp
     }
 }
 
@@ -176,5 +175,5 @@ impl Clone for Big {
 }
 
 fn main() {
-    Big::int_to_big(254389072).print_decimal();
+    println!("{}", Big::int_to_big(254389072).big_to_int());
 }
