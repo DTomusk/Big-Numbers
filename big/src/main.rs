@@ -56,7 +56,7 @@ impl Big {
     fn int_to_big(mut int: i64) -> Big {
         let mut temp = Big::zero();
         let mut i = BIGSIZE-1;
-        
+
         if int < 0 {
             temp.0[0] = true;
             int *= -1;
@@ -96,13 +96,14 @@ impl Big {
         new
     }
 
-    fn mod_exp(mut num: Big, modu: Big, mut pow: Big) -> Big {
+    fn mod_exp(num: Big, mut pow: Big, modu: Big) -> Big {
         let one = Big::int_to_big(1);
+        let mut res = num.clone();
         while pow > one {
-            num = (num * num) % modu;
+            res = (res * num) % modu;
             pow = pow - one;
         }
-        num
+        res
     }
 }
 
@@ -221,12 +222,12 @@ impl Clone for Big {
 }
 
 fn main() {
-    let this = Big::random(Some(4));
-    let that = Big::random(Some(4));
-    let these = Big::random(Some(4));
+    let this = Big::random(Some(3));
+    let that = Big::random(Some(3));
+    let these = Big::random(Some(3));
     println!("{:#?}", this);
-    println!("{:#?}", this);
-    println!("{:#?}", this);
+    println!("{:#?}", that);
+    println!("{:#?}", these);
     println!("{:#?}", Big::mod_exp(this, that, these));
 }
 
