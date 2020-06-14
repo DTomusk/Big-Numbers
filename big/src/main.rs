@@ -16,7 +16,7 @@ const BIGSIZE: usize = 256;
 struct Big([bool; BIGSIZE]);
 
 impl Big {
-    // s is the length of the number in bits
+    // s is the number in bits
     fn random(s: Option<usize>) -> Big {
         let mut arr: [bool; BIGSIZE] = [false; BIGSIZE];
         // this part doesn't feel idiomatic
@@ -42,10 +42,13 @@ impl Big {
 
     fn big_to_int(&self) -> i64 {
         let mut i: i64 = 0;
-        for x in 0..BIGSIZE {
+        for x in 1..BIGSIZE {
             if self.0[x] {
                 i += 2_i64.pow((BIGSIZE-1-x).try_into().unwrap());
             }
+        }
+        if self.0[0]{
+            i *= -1;
         }
         i
     }
@@ -53,6 +56,12 @@ impl Big {
     fn int_to_big(mut int: i64) -> Big {
         let mut temp = Big::zero();
         let mut i = BIGSIZE-1;
+        
+        if int < 0 {
+            temp.0[0] = true;
+            int *= -1;
+        }
+
         while int > 0 {
             if int % 2 == 1 {
                 temp.0[i] = true;
@@ -85,6 +94,15 @@ impl Big {
             new.0[x-times] = self.0[x];
         }
         new
+    }
+
+    fn mod_exp(mut num: Big, modu: Big, mut pow: Big) -> Big {
+        let one = Big::int_to_big(1);
+        while pow > one {
+            num = (num * num) % modu;
+            pow = pow - one;
+        }
+        num
     }
 }
 
@@ -139,9 +157,7 @@ impl ops::Mul for Big {
         let mut total = Big::zero();
         for (i, x) in rhs.0.iter().enumerate() {
             if *x {
-                println!("{:?}", i);
                 let temp = self.shift(BIGSIZE-i-1);
-                println!("{:#?}", temp);
                 total = total + temp;
             }
         }
@@ -205,11 +221,13 @@ impl Clone for Big {
 }
 
 fn main() {
-    let this = Big::random(Some(3));
-    let that = Big::random(Some(3));
+    let this = Big::random(Some(4));
+    let that = Big::random(Some(4));
+    let these = Big::random(Some(4));
     println!("{:#?}", this);
-    println!("{:#?}", that);
-    println!("{:#?}", this * that);
+    println!("{:#?}", this);
+    println!("{:#?}", this);
+    println!("{:#?}", Big::mod_exp(this, that, these));
 }
 
 #[cfg(test)]
